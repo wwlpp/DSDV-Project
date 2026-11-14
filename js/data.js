@@ -45,14 +45,21 @@ DSDV.data = (function () {
     net.pairs.forEach((p, k) => pairIndex.set(pairKey(bankIds[p[0]], bankIds[p[1]]), k));
   }
 
-  async function fetchOptional(name) {
+  async function fetchOptional(name, fallback) {
     try {
       const r = await fetch('data/processed/' + name);
-      return r.ok ? await r.json() : null;
-    } catch (e) { return null; }
+      return r.ok ? await r.json() : fallback;
+    } catch (e) { return fallback; }
   }
 
   async function load() {
+    const bundle = window.DSDV_BUNDLE || null;
+    // Only request an optional file when the bundle confirms it exists, so absent
+    // deliverables (centrality/cluster/sensitivity) never log 404 console errors.
+    const listed = name => !!(bundle && bundle.hashes && bundle.hashes[name]);
+    const optional = (name, key) => listed(name)
+      ? fetchOptional(name, bundle[key] || null)
+      : (bundle ? (bundle[key] || null) : null);
     const canFetch = location.protocol === 'http:' || location.protocol === 'https:';
     if (canFetch) {
       try {
@@ -69,16 +76,15 @@ DSDV.data = (function () {
         net = nj;
         summary = parseSummary(sc);
         [centrality, clusterOrder, sensitivity] = await Promise.all([
-          fetchOptional('centrality.json'),
-          fetchOptional('cluster_order.json'),
-          fetchOptional('sensitivity.json')
+          optional('centrality.json', 'centrality'),
+          optional('cluster_order.json', 'cluster_order'),
+          optional('sensitivity.json', 'sensitivity')
         ]);
         source = 'fetch';
         indexData();
         return api;
       } catch (e) { /* fall back to bundle below */ }
     }
-    const bundle = window.DSDV_BUNDLE;
     if (bundle && bundle.network && bundle.summary_csv) {
       net = bundle.network;
       summary = parseSummary(bundle.summary_csv);
