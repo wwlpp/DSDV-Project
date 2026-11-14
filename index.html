@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Risk Co-movement Network — Vietnamese Listed Banks (2019–2026)</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="top-fixed">
+  <header class="app-header">
+    <div class="head-text">
+      <h1>Risk Co-movement Network among Vietnamese Listed Banks</h1>
+      <p class="subtitle">Rolling 250-session windows · step 20 sessions · 2019–2026 · source: vnstock (VCI)</p>
+    </div>
+    <div class="head-status" id="data-status">Loading data…</div>
+  </header>
+  <div class="banner" role="note">
+    Proxy network built from stock-price co-movement. Co-movement does not imply causation,
+    actual contagion, or systemic importance.
+  </div>
+</div>
+
+<section class="card control-bar" aria-label="Controls">
+  <div class="ctl-row">
+    <fieldset class="mode-group">
+      <legend class="ctl-label">Mode</legend>
+      <label class="radio-pill"><input type="radio" name="mode" value="raw" checked><span>Raw</span></label>
+      <label class="radio-pill"><input type="radio" name="mode" value="residual"><span>Residual <small>(VN-Index removed)</small></span></label>
+    </fieldset>
+    <label class="check-pill" title="Residual threshold is matched to the raw edge count, never below 0.05">
+      <input type="checkbox" id="match-edges" checked>
+      <span>Residual: match raw edge count</span>
+    </label>
+    <button id="play-btn" class="btn-play" type="button" aria-pressed="false">&#9654; Play</button>
+  </div>
+  <div class="ctl-row">
+    <div class="slider-block">
+      <label for="window-slider">Window ending <b id="window-label">—</b></label>
+      <input type="range" id="window-slider" min="0" max="87" step="1" value="87">
+    </div>
+    <div class="slider-block">
+      <label for="threshold-slider">Threshold <b id="threshold-label">0.50</b></label>
+      <input type="range" id="threshold-slider" min="0.05" max="0.90" step="0.01" value="0.50">
+    </div>
+  </div>
+  <div class="ctl-row status-row" aria-live="polite">
+    <span class="stat">Active banks: <b id="stat-active">—</b></span>
+    <span class="stat">Edges: <b id="stat-edges">—</b></span>
+    <span class="stat">Avg corr: <b id="stat-avg">—</b></span>
+    <span class="stat" id="stat-residual-wrap" hidden>Residual threshold: <b id="stat-residual-t">—</b></span>
+    <span id="floor-badge" class="badge badge-warn" hidden></span>
+  </div>
+</section>
+
+<main class="layout">
+  <div class="col-left">
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tabbtn-network" data-tab="network" aria-selected="true" aria-controls="tab-network" class="on">Network</button>
+      <button role="tab" id="tabbtn-matrix" data-tab="matrix" aria-selected="false" aria-controls="tab-matrix">Matrix</button>
+      <button role="tab" id="tabbtn-analysis" data-tab="analysis" aria-selected="false" aria-controls="tab-analysis">Analysis</button>
+      <button role="tab" id="tabbtn-about" data-tab="about" aria-selected="false" aria-controls="tab-about">About / Method</button>
+    </nav>
+
+    <section id="tab-network" class="card view-panel" role="tabpanel" aria-labelledby="tabbtn-network">
+      <div id="view-network" class="view-host"></div>
+    </section>
+
+    <section id="tab-matrix" class="card view-panel" role="tabpanel" aria-labelledby="tabbtn-matrix" hidden>
+      <div id="view-matrix" class="view-host"></div>
+    </section>
+
+    <section id="tab-analysis" class="card view-panel" role="tabpanel" aria-labelledby="tabbtn-analysis" hidden>
+      <div id="view-analysis" class="view-host"></div>
+    </section>
+
+    <section id="tab-about" class="card view-panel about-panel" role="tabpanel" aria-labelledby="tabbtn-about" hidden>
+      <span class="badge badge-info">Draft — final wording after internal evaluation (30/11)</span>
+      <h3>Method</h3>
+      <p>Daily log returns of 19 listed Vietnamese banks (source: vnstock, VCI community edition).
+      Rolling windows of 250 trading sessions, step 20 sessions: 88 windows ending 2019-10-09
+      through 2026-09-30. A pairwise correlation matrix is computed for each window.</p>
+      <p><b>Raw</b> mode correlates returns directly. <b>Residual</b> mode regresses each bank's
+      return on the VN-Index within the window and correlates the residuals, removing the
+      market-wide component.</p>
+      <p>Two banks are linked when their correlation is at or above the threshold. In residual
+      mode the threshold is by default chosen so the residual network has the same number of
+      edges as the raw network in the same window. This matched threshold is never allowed
+      below 0.05: a lower (possibly negative) threshold would treat opposite-direction
+      co-movement as a link and give PageRank negative weights.</p>
+      <p>PageRank (damping 0.85, edge weights = correlations) is computed on the banks that have
+      data in the window only. Banks without edges share their probability mass equally among
+      active banks. Banks without data in a window are shown as N/A, never as zero.</p>
+
+      <h3>How to read this app</h3>
+      <ul>
+        <li>Every point on the timeline is a 250-session window <b>ending</b> at that date;
+        labels therefore read “window ending …”.</li>
+        <li>Raw and residual share one diverging color scale [−0.8, 0, +0.8], so switching
+        modes shows how much connectedness remains once the market-wide component is removed.</li>
+        <li>Striped cells mean “no data in this window”. The diagonal is not a bank pair.</li>
+        <li>Selecting a bank highlights the same bank across Network, Matrix, Ranking and Timeline.</li>
+        <li>The balanced-panel line (dashed) on the timeline uses only the 15 banks present
+        since 2019, so changes in sample composition are not mistaken for changes in co-movement.</li>
+      </ul>
+
+      <h3>Ranking tiers</h3>
+      <p>The baseline is 1/N<sub>active</sub> (all active banks equal). A bank is
+      <b>Core</b> when PageRank ≥ 1.5 × baseline, <b>Periphery</b> when PageRank ≤ 0.5 × baseline,
+      and <b>Middle</b> otherwise; a bank with no edges is labeled <b>isolated</b>. Top PageRank
+      scores are close: read the ranking by tier — differences below 0.5 percentage points are
+      not meaningful. Numeric ranks appear only in tooltips. Tier stability across thresholds
+      is checked in Analysis (Q4). This is a display convention, not a statistical test.</p>
+
+      <h3>Data and missing values</h3>
+      <p>15 banks have data from the first window. NAB joins in the window ending 2021-10-07,
+      MSB and ABB in the window ending 2021-11-04, and OCB in the window ending 2021-12-02.
+      The rise in residual connectedness in windows ending Apr–Oct 2022 coincides with these
+      entries, so the timeline also shows the balanced 15-bank panel. SSB is excluded
+      (short series).</p>
+
+      <h3>Limits</h3>
+      <ul>
+        <li>Proxy network built from stock prices only — no bilateral lending or exposure data.</li>
+        <li>Co-movement does not imply causation, actual contagion, or systemic importance.</li>
+        <li>Centrality is not systemic importance: VCB and BID are large banks but sit in the
+        Periphery/Middle tiers at default settings.</li>
+        <li>Ownership-group comparisons (Q3) describe groups only; bank size is outside the
+        project scope.</li>
+        <li>The state–state group contains only 3 pairs; treat its average as indicative.</li>
+      </ul>
+    </section>
+
+    <section class="card timeline-card">
+      <h2>Average connectedness over time</h2>
+      <div id="view-timeline" class="view-host"></div>
+    </section>
+  </div>
+
+  <aside class="col-right">
+    <section class="card">
+      <h2>Ranking by PageRank</h2>
+      <div id="ranking-badge" class="badge badge-info"></div>
+      <div id="view-ranking" class="view-host"></div>
+    </section>
+
+    <section class="card legend-card">
+      <h2>Legend</h2>
+      <div class="legend-item"><span class="swatch" style="background:#d95f02"></span>State-owned <span class="muted">(provisional)</span></div>
+      <div class="legend-item"><span class="swatch" style="background:#1b9e77"></span>Private <span class="muted">(provisional)</span></div>
+      <div class="legend-item"><span class="line-swatch" style="background:#252525"></span>Raw edge</div>
+      <div class="legend-item"><span class="line-swatch" style="background:#6a51a3"></span>Residual edge</div>
+      <div class="legend-item"><span class="line-swatch dashed" style="background:#6a51a3"></span>Balanced panel (15 banks since 2019)</div>
+      <div class="legend-item"><span class="swatch swatch-null"></span>No data in this window</div>
+      <div class="legend-item"><span class="swatch" style="background:#737373"></span>Diagonal (not a pair)</div>
+      <div class="legend-item"><span class="swatch swatch-select"></span>Selected bank / pair</div>
+      <div class="legend-scale">
+        <div class="legend-scale-title">Correlation (both modes)</div>
+        <div class="scale-bar"></div>
+        <div class="scale-labels"><span>≤ −0.8</span><span>0</span><span>≥ +0.8</span></div>
+      </div>
+      <p class="muted legend-note">Bank labels use dark text with a 4px ownership-color bar.
+      Group colors are provisional until confirmed by the team.</p>
+    </section>
+  </aside>
+</main>
+
+<div id="tooltip" role="tooltip"></div>
+
+<script src="js/vendor/d3.v7.min.js"></script>
+<script src="js/data_bundle.js"></script>
+<script src="js/state.js"></script>
+<script src="js/data.js"></script>
+<!-- View scripts (network.js by Tín; table/timeline/matrix/analysis.js by Đạt)
+     are inserted here in their integration PRs, before main.js. -->
+<script src="js/main.js"></script>
+</body>
+</html>
