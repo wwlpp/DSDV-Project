@@ -182,12 +182,70 @@ DSDV.data = (function () {
     return k === undefined ? null : net.windows[i][mode][k];
   }
 
+  /* Verified centrality entry for the current settings, or null when the settings
+   * fall outside what centrality.json covers (off-grid threshold, missing window).
+   * Residual+match maps to the residual_matched variant (web default, D1/D2). */
+  function centralityFor(s) {
+    const c = centrality;
+    if (!c || !c.windows || !c.meta) return null;
+    const key = s.threshold.toFixed(2);
+    if (!(c.meta.thresholds || []).includes(key)) return null;
+    const w = c.windows[s.windowIndex];
+    if (!w || w.end !== net.windows[s.windowIndex].end) return null;
+    const m = w.metrics && w.metrics[key];
+    if (!m) return null;
+    const variant = s.mode === 'raw' ? 'raw'
+      : (s.matchRawEdges ? 'residual_matched' : 'residual');
+    return m[variant] || null;
+  }
+
+  function toMap(arr, ids) {
+    const o = {};
+    ids.forEach((id, k) => { o[id] = arr ? arr[k] : null; });
+    return o;
+  }
+
+  /* Single accessor for centrality measures, unified shape regardless of source:
+   * pagerank/degree/strength are always objects keyed by bank id (null = inactive).
+   * On-grid -> centrality.json; off-grid -> computed in browser (D5). */
+  function metrics(i, opts) {
+    const entry = centralityFor({ ...opts, windowIndex: i });
+    if (entry) {
+      const ids = centrality.banks;
+      return {
+        source: 'centrality.json',
+        threshold: entry.threshold,
+        n_edges: entry.n_edges,
+        floor_hit: !!entry.floor_hit,
+        matched_threshold: entry.matched_threshold != null ? entry.matched_threshold : null,
+        pagerank: toMap(entry.pagerank, ids),
+        degree: toMap(entry.degree, ids),
+        strength: toMap(entry.strength, ids)
+      };
+    }
+    const er = edges(i, opts);
+    const active = activeBanks(i);
+    const ds = degreeStrength(er.edges, active);
+    return {
+      source: 'browser',
+      threshold: er.threshold,
+      n_edges: er.edges.length,
+      floor_hit: er.floorHit,
+      matched_threshold: er.matchedThreshold,
+      pagerank: pagerank(er.edges, active),
+      degree: ds.degree,
+      strength: ds.strength
+    };
+  }
+
   const api = {
     load,
     edges,
     activeBanks,
     pagerank,
     degreeStrength,
+    centralityFor,
+    metrics,
     pairKey,
     pairValue,
     FLOOR,
