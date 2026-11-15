@@ -103,9 +103,10 @@
         er.edges.length + ' pairs ≥ 0.05)';
     }
 
-    $('ranking-badge').textContent = data.centrality()
-      ? 'Source: centrality.json (verified)'
-      : 'Computed in browser for threshold = ' + s.threshold.toFixed(2);
+    const cEntry = data.centralityFor(s);
+    const rankBadge = $('ranking-badge');
+    rankBadge.hidden = !cEntry;
+    rankBadge.textContent = cEntry ? 'Source: centrality.json (verified)' : '';
 
     for (const t of TABS) {
       $('tab-' + t).hidden = t !== s.activeTab;

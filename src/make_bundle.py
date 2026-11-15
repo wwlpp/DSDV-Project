@@ -32,7 +32,9 @@ SOURCES = {
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # Normalize CRLF->LF so the hash is identical across Windows and Linux/macOS
+    # checkouts (core.autocrlf / eol settings must not change the bundle hash).
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def build() -> int:
