@@ -9,17 +9,7 @@ DSDV.views.ranking = (function () {
   const data = () => DSDV.data;
   const state = () => DSDV.state;
   let filter = 'all';           // 'all' | 'state' | 'private'  (S5, view-local)
-  let host = null, tbody = null, noteEl = null;
-  let lastRows = [];
-
-  const TIER_ORDER = { Core: 0, Middle: 1, Periphery: 2, isolated: 3 };
-
-  function tierOf(pr, degree, base) {
-    if (degree === 0) return 'isolated';
-    if (pr >= 1.5 * base) return 'Core';
-    if (pr <= 0.5 * base) return 'Periphery';
-    return 'Middle';
-  }
+  let tbody = null;
 
   function buildRows(s) {
     const d = data();
@@ -34,7 +24,7 @@ DSDV.views.ranking = (function () {
       return {
         id, group: groups[id], inactive: false,
         pr, degree: m.degree[id], strength: m.strength[id],
-        tier: tierOf(pr, m.degree[id], base), ratio: base ? pr / base : 0
+        tier: d.tier(pr, m.degree[id], active.length), ratio: base ? pr / base : 0
       };
     });
     const act = rows.filter(r => !r.inactive).sort((a, b) => b.pr - a.pr);
@@ -49,7 +39,6 @@ DSDV.views.ranking = (function () {
   }
 
   function init(el) {
-    host = el;
     el.innerHTML =
       '<div class="ranking-filter" role="group" aria-label="Filter by ownership">' +
       ['all', 'state', 'private'].map(f =>
@@ -62,7 +51,6 @@ DSDV.views.ranking = (function () {
       '<p class="ranking-note">Top PageRank scores are close; read by tier — differences below ' +
       '0.5 percentage points are not meaningful. Numeric rank is in the row tooltip.</p>';
     tbody = el.querySelector('tbody');
-    noteEl = el.querySelector('.ranking-note');
     el.querySelectorAll('.ranking-filter button').forEach(btn => {
       btn.addEventListener('click', () => {
         filter = btn.dataset.filter;
@@ -84,8 +72,8 @@ DSDV.views.ranking = (function () {
 
   function render(s) {
     if (!tbody) return;
+    hideTip();   // a row under the mouse may be removed by this render
     const rows = visible(buildRows(s));
-    lastRows = rows;
     const maxPR = d3.max(rows.filter(r => !r.inactive), r => r.pr) || 1;
     const sel = s.selectedBank;
 
@@ -133,7 +121,12 @@ DSDV.views.ranking = (function () {
     state().set({ selectedBank: s.selectedBank === id ? null : id }, 'ranking');
   }
 
-  function update(s) { render(s); }
+  function update(s, changed) {
+    // Ranking sidebar is independent of the active tab and of pair selection.
+    if (changed && changed.length &&
+        changed.every(k => k === 'activeTab' || k === 'selectedPair')) return;
+    render(s);
+  }
 
   return { init, update };
 })();
