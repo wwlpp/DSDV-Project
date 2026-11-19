@@ -177,6 +177,15 @@ DSDV.data = (function () {
     return { degree, strength };
   }
 
+  /* D7 tier convention, shared by Ranking and (later) the Q1 heatmap. */
+  function tier(pr, degree, nActive) {
+    const base = nActive ? 1 / nActive : 0;
+    if (degree === 0) return 'isolated';
+    if (pr >= 1.5 * base) return 'Core';
+    if (pr <= 0.5 * base) return 'Periphery';
+    return 'Middle';
+  }
+
   function pairValue(i, mode, a, b) {
     const k = pairIndex.get(pairKey(a, b));
     return k === undefined ? null : net.windows[i][mode][k];
@@ -244,6 +253,7 @@ DSDV.data = (function () {
     activeBanks,
     pagerank,
     degreeStrength,
+    tier,
     centralityFor,
     metrics,
     pairKey,
