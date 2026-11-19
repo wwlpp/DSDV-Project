@@ -1,5 +1,10 @@
 # Data Schema v1
 
+**Status:** frozen on 15/11/2026. After this date, any change to a field name, file shape or shared state name must be announced to all four members before it is made.
+
+Owner: Phương (team leader). Exports: Lợi (`centrality.json`, `cluster_order.json`). Readers: Tín, Đạt.
+
+---
 
 ## 1. Files
 
@@ -77,7 +82,7 @@ The late-listed banks are NAB (10/2020), MSB (12/2020), ABB (12/2020), OCB (01/2
 
 ---
 
-## 3. `centrality.json` (`src/export_centrality.py`)
+## 3. `centrality.json` (exported by Lợi, `src/export_centrality.py`)
 
 Pre-computed centrality for every window, on a fixed grid of thresholds. About 916 KB. Bank arrays follow the order of `banks`. Windows follow the order of `network_data.json`.
 
@@ -164,14 +169,43 @@ Then run `python src/make_bundle.py --check`; it must print `OK: bundle matches 
 
 ## 5. Ownership group
 
-Two values only: `"state"` and `"private"`. Assigned by hand from public sources.
+Two values only: `"state"` and `"private"`. Assigned by hand from public sources. The groups are used for node colour (network), ordering (matrix) and Q3.
+
+**Rule.** `state` = a bank in which the State is the majority shareholder (state-controlled). `private` = all other listed banks.
 
 | Group | Banks | Source |
 |---|---|---|
-| state | VCB, BID, CTG | To be recorded by Phương (due 19/11) |
-| private | the other 16 | To be recorded by Phương (due 19/11) |
+| state | VCB, BID, CTG | The Investor, "Vietnam's Big 4 banks post record profits in 2024": "Vietinbank, BIDV and Vietcombank are state-controlled, with the state as majority shareholder." https://theinvestor.vn/vietnams-big-4-banks-post-record-profits-in-2024-d14117.html (the fourth big bank, Agribank, is wholly state-owned but not in the data set) |
+| private | TCB, MBB, VPB, ACB, STB, HDB, TPB, VIB, SHB, MSB, LPB, OCB, EIB, NAB, ABB, BAB | No State majority shareholder found. Per-bank evidence below |
 
-Current state of the code: `build_dataset.py` sets `VCB`, `BID`, `CTG` to `state` and everything else to `private` by default. The assignment must be checked and the source written in the table above before 19/11. If any group changes, update `GROUPS` in `src/build_dataset.py`, re-run the script and tell the team.
+Evidence for `private` (largest holders found; none is a State majority):
+
+| Bank | Finding | Source |
+|---|---|---|
+| TCB | Masan about 15%, chairman group about 19.7%. No State holder | [Doanh Nhan VN, 27/08/2026](https://doanhnhanvn.vn/thay-gi-tu-co-cau-co-dong-co-dac-tai-nhieu-ngan-hang.html) |
+| VPB | SMBC about 15%, chairman group 19.67%. No State holder | same; [Bao Dau tu, 28/07/2024](https://baodautu.vn/lo-dien-co-dong-so-huu-ty-le-1-tro-len-tai-cac-ngan-hang-d220908.html) |
+| ACB | Three private groups: 12.68%, 10.23%, about 9.6%. No State holder | [VnBusiness, 11/11/2026](https://vnbusiness.vn/nhung-nhom-co-dong-dang-nam-giu-khoi-tai-san-hang-chuc-nghin-ty-dong-tai-acb.html) |
+| HDB | Sovico 14.27%. No State holder | Bao Dau tu, 28/07/2024 |
+| SHB | Chairman group about 17%. No State holder | Doanh Nhan VN, 27/08/2026 |
+| ABB | Maybank 16.39%, Geleximco 12.78%. No State holder | Bao Dau tu, 28/07/2024 |
+| BAB | Leadership and related holders above 29%. No State holder | Doanh Nhan VN, 27/08/2026 |
+| LPB | VNPost (State-owned) only 6.537%; 83.6% held by holders under 1% | Doanh Nhan VN, 27/08/2026 |
+| EIB | Vietcombank 4.51%, GELEX 10%; 75.5% held by holders under 1% | Doanh Nhan VN, 27/08/2026 |
+| OCB | Aozora 15%; small holders Ben Thanh Corp 4.96% and City Party Office 3.65% (both State-linked, minor) | Bao Dau tu, 28/07/2024 |
+| MSB | VNPT 6.05% (State-owned, minor); ROX Group holders over 30% | Bao Dau tu, 28/07/2024; Doanh Nhan VN, 27/08/2026 |
+| TPB, VIB, NAB | **Not individually verified.** Articles say VIB and TPB are highly concentrated in private hands; NAB not covered. No State holder reported. Check the annual report before the final report | Doanh Nhan VN, 27/08/2026 |
+
+**Borderline cases.** Under the rule these banks are `private`, but they have State links and Q3 must be read with this in mind:
+
+- **MBB**: military-linked. A military enterprise holds 14.13% ([Bao Dau tu, 28/07/2024](https://baodautu.vn/lo-dien-co-dong-so-huu-ty-le-1-tro-len-tai-cac-ngan-hang-d220908.html)); state-owned enterprises hold about 48% together ([The Investor, Moody's upgrade of MBBank](https://theinvestor.vn/moodys-ratings-upgrades-mbbanks-deposit-ratings-to-ba2-from-ba3-outlook-stable-d19035.html)). No single State majority holder.
+- **STB**: VAMC (State asset management company) holds 32.5% as of 23/12/2025, shares registered in its name and not yet divestable ([Dan tri, 23/12/2025](https://dantri.com.vn/kinh-doanh/ai-dang-so-huu-sacombank-20251223210421387.htm)). Largest holder but not a majority, so `private`.
+- **LPB, EIB, OCB, MSB**: small State-owned stakes (under 7% each), not control.
+
+Sensitivity check (optional, Lợi): if MBB and STB are re-labelled `state`, does the Q3 result change? If yes, say so in the report.
+
+Current state of the code: `GROUPS` in `src/build_dataset.py` already matches this table (`VCB`, `BID`, `CTG` = `state`, everything else = `private` by default), so no rebuild is needed. If any group changes, update `GROUPS`, then run `build_dataset.py`, `export_centrality.py`, `make_bundle.py` and tell the team.
+
+Record of check: date checked 19/11/2026, by Phương. Shareholder data in the sources is from 2024 to 2026 and changes over time.
 
 ---
 
@@ -189,7 +223,7 @@ Check values: latest window (2026-09-30), `avg_corr` raw 0.4365, residual 0.2026
 
 ---
 
-## 7. Shared UI state (Tín, Đạt)
+## 7. Shared UI state (Tín and Đạt)
 
 Names are frozen and match `js/state.js`. All views read and write the same state through `DSDV.state.get()`, `DSDV.state.set(patch, source)` and `DSDV.state.on(fn)`. Do not add fields without telling the whole team.
 
@@ -206,4 +240,12 @@ Names are frozen and match `js/state.js`. All views read and write the same stat
 
 Rule: selecting a bank in any view sets `selectedBank`, and every view must highlight it. Views register themselves as `DSDV.views.<name>` (for example `DSDV.views.network` mounts into `#view-network`). Do not edit `index.html`, `main.js` or `state.js` outside a pull request.
 
+---
 
+## 8. Change log
+
+| Date | Change | By |
+|---|---|---|
+| 15/11/2026 | Schema v1 frozen | Phương |
+| 19/11/2026 | Section 5 filled: definition, per-bank evidence, MBB and STB borderline notes | Phương |
+| 15/11/2026 | Section 3 rewritten to match the exported `centrality.json` (threshold grid, three modes); regenerate order added | Phương |
