@@ -1,0 +1,56 @@
+DSDV web self-check log — plan v3 §9.3 (complements Lợi's docs/verify_log.txt)
+
+2026-11-24 · branch dat/timeline-matrix (base 95076ab; PR#3 pending) · P3A run
+Harness: python src/test_data.py → 25/25 PASS
+  V-01, V-02, V-03, V-04, V-05, V-06, V-07, V-08, V-09, V-10, V-15, V-16,
+  NAB entry 2021-08-10, balanced panel 15 (no nulls), timeline y-domain guard,
+  6 D7 tier boundaries, metrics on/off-grid source, V-SC (both parts)
+V-SC centrality: 2376 cells (88 windows × 9 thresholds × 3 variants),
+  max|PR diff| = 5.000e-06, max|strength diff| = 5.329e-15 (tolerance 0.001)
+V-SC averages: max |browser pair-mean − summary.csv| = 5.00e-05 (tolerance 0.0001)
+Bundle: python src/make_bundle.py --check → OK (network_data.json, summary.csv, centrality.json)
+
+Browser checks (headless Chrome 1366/1280/1920 + in-app Chromium):
+  file:// (source=bundle) and http:// (source=fetch): zero console errors/warnings
+  Matrix: 361 cells; 132 striped null cells at window 0; diagonal #737373 with dash;
+    cell fill matches shared reversed-RdBu scale (TCB–MBB 0.642 @2022-07-27);
+    cell click → selectedPair + pair panel (raw 0.834 / residual 0.642 / diff 0.192,
+    edge at matched threshold 0.214 = Yes); sparkline click jumps window
+  Linking: label click → selectedBank; outline on matrix row+col, ranking row and
+    timeline bank-average line update together; Esc clears
+  Timeline: click + drag changes window (down→44, drag→22, no change after release);
+    tooltip shows window end, raw, residual, residual/raw ratio, balanced panel,
+    active count; hides on leave and on re-render; 3 jump buttons work
+  V-17: 88 consecutive window updates, max 3.9 ms per update (< 50 ms required)
+  Layout V-13: scrollWidth == clientWidth at 1366×768, 1280×720, 1920×1080;
+    ranking table width == sidebar content width (254/254 @280px col, 274/274 @300px col)
+  Wording audit V-14: forbidden terms appear only in the banner negation
+
+Fixes made during this run (found by the checks above):
+  - :has(input:checked) pill styling missed programmatic .checked changes on some
+    Chromium builds → replaced with explicit .on classes toggled in main.js
+  - ranking null rows widened the nowrap PR column (363px min-content → horizontal
+    scroll at window 0) → N/A sentence now spans one colspan cell; PR bar hidden
+    below 1360px so the table fits the 280px sidebar
+  - About limits bullet repeated the banner's forbidden terms → reworded to point
+    at the banner (handoff §5: banner is the only place they may appear)
+
+Figures: report/figures/p3a_1366x768.png, p3a_matrix_2022_1366x768.png,
+  p3a_matrix_2022_1366x1000.png, p3a_matrix_2022_1280x1000.png,
+  p3a_matrix_2022_1920x1080.png, p3a_matrix_w0_1366x1000.png,
+  p3a_timeline_2025_1366x1400.png
+
+2026-11-25 · branch dat/timeline-matrix · post-review re-run (PR#3)
+Harness: python src/test_data.py → 26/26 PASS (adds bankAvgSeries case)
+Layout: python src/test_layout.py → 6/6 PASS (headless Chrome probe,
+  src/layout_probe.html: no horizontal scroll, table fits sidebar, null-row
+  colspan, 132 striped cells, checked pill .on class + navy)
+Bundle: python src/make_bundle.py --check → OK
+Review fixes applied (ponytail-review 25/11):
+  1 timeline pointercancel handler + dragging reset on rebuild (stuck-drag bug)
+  2 layout regression probe committed as src/test_layout.py + src/layout_probe.html
+  3 bankAvgSeries harness case
+  4 shared js/ui.js (tooltip show/hide + D4 palette); copies removed from
+    table/timeline/matrix
+Browser re-check after refactor: file:// and http:// zero console errors;
+  pair click, tooltip, pointercancel-then-hover all behave as expected
