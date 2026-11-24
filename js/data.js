@@ -16,6 +16,7 @@ DSDV.data = (function () {
   let source = 'none';       // 'fetch' | 'bundle'
   let bankIds = [];
   let pairIndex = new Map(); // 'A|B' -> index into pairs/values
+  let avgCache = {};         // balanced/bank mean series, reset on load
 
   function pairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
 
@@ -43,6 +44,7 @@ DSDV.data = (function () {
     bankIds = net.banks.map(b => b.id);
     pairIndex = new Map();
     net.pairs.forEach((p, k) => pairIndex.set(pairKey(bankIds[p[0]], bankIds[p[1]]), k));
+    avgCache = {};
   }
 
   async function fetchOptional(name, fallback) {
@@ -191,6 +193,37 @@ DSDV.data = (function () {
     return k === undefined ? null : net.windows[i][mode][k];
   }
 
+  /* D6: the balanced panel is the set of banks present in the first window (15).
+   * Means below use the same method as summary.csv: mean of non-null pair values. */
+  function balancedPanel() { return activeBanks(0); }
+
+  function meanSeries(mode, keepPair) {
+    const key = mode + '|' + keepPair.key;
+    if (avgCache[key]) return avgCache[key];
+    const ks = [];
+    net.pairs.forEach((p, k) => { if (keepPair.fn(p)) ks.push(k); });
+    const out = net.windows.map(w => {
+      let sum = 0, n = 0;
+      ks.forEach(k => { const c = w[mode][k]; if (c != null) { sum += c; n++; } });
+      return n ? sum / n : null;
+    });
+    avgCache[key] = out;
+    return out;
+  }
+
+  function balancedSeries(mode) {
+    const panel = new Set(balancedPanel());
+    return meanSeries(mode, {
+      key: 'balanced',
+      fn: p => panel.has(bankIds[p[0]]) && panel.has(bankIds[p[1]])
+    });
+  }
+
+  function bankAvgSeries(id, mode) {
+    const k = bankIds.indexOf(id);
+    return meanSeries(mode, { key: 'bank:' + id, fn: p => p[0] === k || p[1] === k });
+  }
+
   /* Verified centrality entry for the current settings, or null when the settings
    * fall outside what centrality.json covers (off-grid threshold, missing window).
    * Residual+match maps to the residual_matched variant (web default, D1/D2). */
@@ -270,6 +303,9 @@ DSDV.data = (function () {
     summary: () => summary,
     summaryAt: i => summary[i],
     avgSeries: mode => summary.map(r => r[mode]),
+    balancedPanel,
+    balancedSeries,
+    bankAvgSeries,
     centrality: () => centrality,
     clusterOrder: () => clusterOrder,
     sensitivity: () => sensitivity,

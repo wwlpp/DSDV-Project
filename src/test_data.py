@@ -51,6 +51,43 @@ d.load().then(() => {
   };
   T('NAB entry 2021-08-10', actAt('2021-08-10').has('NAB') && !actAt('2021-07-13').has('NAB'));
 
+  // P3A timeline cases (plan v3 §9.1, errata v3.1 dates)
+  const ends = d.windows().map(w => w.end);
+  const iOf = e => ends.indexOf(e);
+  const sum = d.summary();
+  const rMax = sum.reduce((a, r) => r.residual > a.residual ? r : a);
+  const rMin = sum.reduce((a, r) => r.residual < a.residual ? r : a);
+  T('V-03', close(rMax.residual, 0.3049) && rMax.end === '2022-07-27' &&
+    close(rMin.residual, 0.0745) && rMin.end === '2024-01-02');
+  const j0 = d.summaryAt(iOf('2025-03-20')), j1 = d.summaryAt(iOf('2025-04-18'));
+  T('V-04', close(j0.raw, 0.3806) && close(j0.residual, 0.0902) &&
+    close(j1.raw, 0.5197) && close(j1.residual, 0.1073));
+  const nullsAt = e => d.bankIds().filter(id => !d.activeBanks(iOf(e)).includes(id));
+  T('V-05', nullsAt('2021-08-10').join(',') === 'MSB,OCB,ABB' &&
+    nullsAt('2021-11-04').join(',') === 'OCB' && nullsAt('2021-12-02').length === 0 &&
+    d.summaryAt(iOf('2021-08-10')).n_banks === 16 && d.summaryAt(iOf('2021-11-04')).n_banks === 18);
+  const bal = d.balancedSeries('residual');
+  T('V-06', close(bal[iOf('2021-12-02')], 0.2062) && close(bal[iOf('2022-07-27')], 0.2931));
+  T('balanced panel 15, no nulls', d.balancedPanel().length === 15 && bal.every(v => v != null));
+  const vibK = d.bankIds().indexOf('VIB');
+  const v87 = d.window(87).raw.filter((c, k) => c != null &&
+    (d.pairs()[k][0] === vibK || d.pairs()[k][1] === vibK));
+  T('bankAvgSeries', d.bankAvgSeries('MSB', 'raw')[0] === null &&
+    close(d.bankAvgSeries('VIB', 'raw')[87], v87.reduce((a, b) => a + b, 0) / v87.length));
+  const mx = a => a.reduce((p, v) => v > p ? v : p, -Infinity);
+  T('timeline y-domain guard', mx(sum.map(r => r.raw)) < 0.7 &&
+    mx(sum.map(r => r.residual)) < 0.7 && mx(bal) < 0.7);
+  // V-SC part 2: browser pair-mean vs summary.csv, all 88 windows x 2 modes
+  let maxAvg = 0;
+  for (let i = 0; i < d.windowCount(); i++) {
+    for (const mode of ['raw', 'residual']) {
+      const v = d.window(i)[mode].filter(c => c != null);
+      const mean = v.reduce((a, b) => a + b, 0) / v.length;
+      maxAvg = Math.max(maxAvg, Math.abs(mean - d.summaryAt(i)[mode]));
+    }
+  }
+  T('V-SC avg vs summary (' + maxAvg.toExponential(2) + ')', maxAvg < 1e-4);
+
   // D7 tier boundaries (shared rule used by Ranking and Q1)
   const base = 1 / 19;
   T('tier Core', d.tier(1.5 * base, 5, 19) === 'Core');
