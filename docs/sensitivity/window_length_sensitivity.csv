@@ -1,0 +1,4 @@
+window_days,n_windows,first_end,last_avg_raw,last_avg_residual,residual_peak,residual_peak_end,raw_peak,raw_peak_end,avg_corr_pearson_vs_250_raw,avg_corr_pearson_vs_250_residual,pagerank_spearman_vs_250_raw,pagerank_spearman_vs_250_residual,same_tier_pct_vs_250_raw,same_tier_pct_vs_250_residual
+120,94,2019-04-18,0.3381,0.1898,0.3917,2022-01-28,0.6292,2025-04-18,0.7555,0.781,0.8674,0.8142,79.7,80.9
+250,88,2019-10-09,0.4365,0.2026,0.3049,2022-07-27,0.5949,2022-06-01,,,,,,
+500,75,2020-10-21,0.4791,0.1862,0.2266,2023-05-18,0.5622,2023-05-18,0.5489,0.5756,0.8789,0.8561,75.1,74.9
