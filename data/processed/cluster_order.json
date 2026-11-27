@@ -1,0 +1,122 @@
+{
+ "meta": {
+  "method": "Average-linkage hierarchical clustering with optimal leaf ordering on d = sqrt(2*(1-corr)), corr = mean residual correlation over the windows where all 19 banks have data; k chosen by the largest silhouette score for k = 2..6.",
+  "mode": "residual",
+  "windows_used": 61,
+  "period": [
+   "2021-12-02",
+   "2026-09-30"
+  ],
+  "k": 3,
+  "silhouette": {
+   "2": 0.054,
+   "3": 0.0543,
+   "4": 0.0374,
+   "5": 0.0339,
+   "6": 0.0303
+  },
+  "stability_ari": {
+   "description": "Adjusted Rand Index between this clustering and the clustering of each single window (same k). 1 = identical, 0 = chance.",
+   "median": 0.409,
+   "p25": 0.169,
+   "p75": 0.557
+  },
+  "within_cluster_avg_corr": 0.2117,
+  "between_cluster_avg_corr": 0.0933,
+  "clusters": [
+   {
+    "id": 0,
+    "banks": [
+     "VCB",
+     "BID",
+     "CTG"
+    ],
+    "size": 3,
+    "within_avg_corr": 0.2191,
+    "groups": [
+     "state"
+    ]
+   },
+   {
+    "id": 1,
+    "banks": [
+     "HDB",
+     "SHB",
+     "VPB",
+     "TPB",
+     "OCB",
+     "MSB",
+     "VIB",
+     "TCB",
+     "MBB",
+     "ACB",
+     "STB",
+     "LPB",
+     "NAB",
+     "ABB",
+     "BAB"
+    ],
+    "size": 15,
+    "within_avg_corr": 0.2115,
+    "groups": [
+     "private"
+    ]
+   },
+   {
+    "id": 2,
+    "banks": [
+     "EIB"
+    ],
+    "size": 1,
+    "within_avg_corr": null,
+    "groups": [
+     "private"
+    ]
+   }
+  ],
+  "note": "Clusters describe co-movement of stock returns, not ownership, size or lending links. Weak clusters: read together with the stability score.",
+  "generated_by": "src/export_clusters.py"
+ },
+ "order": [
+  "VCB",
+  "BID",
+  "CTG",
+  "HDB",
+  "SHB",
+  "VPB",
+  "TPB",
+  "OCB",
+  "MSB",
+  "VIB",
+  "TCB",
+  "MBB",
+  "ACB",
+  "STB",
+  "LPB",
+  "NAB",
+  "ABB",
+  "BAB",
+  "EIB"
+ ],
+ "cluster": {
+  "VCB": 0,
+  "BID": 0,
+  "CTG": 0,
+  "TCB": 1,
+  "MBB": 1,
+  "VPB": 1,
+  "ACB": 1,
+  "STB": 1,
+  "HDB": 1,
+  "TPB": 1,
+  "VIB": 1,
+  "SHB": 1,
+  "MSB": 1,
+  "LPB": 1,
+  "OCB": 1,
+  "EIB": 2,
+  "NAB": 1,
+  "ABB": 1,
+  "BAB": 1
+ }
+}
