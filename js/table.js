@@ -8,6 +8,8 @@ DSDV.views = DSDV.views || {};
 DSDV.views.ranking = (function () {
   const data = () => DSDV.data;
   const state = () => DSDV.state;
+  const showTip = DSDV.ui.showTip, hideTip = DSDV.ui.hideTip;
+  const GROUP_COLORS = DSDV.ui.GROUP_COLORS;
   let filter = 'all';           // 'all' | 'state' | 'private'  (S5, view-local)
   let tbody = null;
 
@@ -61,15 +63,6 @@ DSDV.views.ranking = (function () {
     });
   }
 
-  function showTip(ev, html) {
-    const t = document.getElementById('tooltip');
-    t.style.display = 'block';
-    t.innerHTML = html;
-    t.style.left = (ev.clientX + 12) + 'px';
-    t.style.top = (ev.clientY + 12) + 'px';
-  }
-  function hideTip() { document.getElementById('tooltip').style.display = 'none'; }
-
   function render(s) {
     if (!tbody) return;
     hideTip();   // a row under the mouse may be removed by this render
@@ -105,7 +98,7 @@ DSDV.views.ranking = (function () {
     all.select('.rk-tier').text(r => r.inactive ? '—' : r.tier)
       .attr('data-tier', r => r.inactive ? '' : r.tier);
     all.select('.rk-bank').html(r =>
-      '<span class="group-bar" style="background:' + (r.group === 'state' ? '#d95f02' : '#1b9e77') + '"></span>' + r.id);
+      '<span class="group-bar" style="background:' + GROUP_COLORS[r.group] + '"></span>' + r.id);
     all.select('.rk-pr').html(r => r.inactive
       ? '<span class="na">N/A – no data in this window</span>'
       : '<span class="pr-bar"><span style="width:' + (r.pr / maxPR * 100).toFixed(1) + '%"></span></span>' +
@@ -113,6 +106,11 @@ DSDV.views.ranking = (function () {
     all.select('.rk-ratio').text(r => r.inactive ? '—' : r.ratio.toFixed(2) + '×');
     all.select('.rk-deg').text(r => r.inactive ? '—' : r.degree);
     all.select('.rk-str').text(r => r.inactive ? '—' : r.strength.toFixed(2));
+    // Null rows: one colspan cell, so the N/A sentence can never widen the
+    // nowrap PR column past the sidebar width (DoD-7).
+    all.select('.rk-pr').attr('colspan', r => r.inactive ? 4 : null);
+    ['.rk-ratio', '.rk-deg', '.rk-str'].forEach(sel =>
+      all.select(sel).style('display', r => r.inactive ? 'none' : null));
     all.order();   // keep DOM order = data order (active by PR, then nulls at bottom)
   }
 

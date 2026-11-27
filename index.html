@@ -26,10 +26,10 @@
   <div class="ctl-row">
     <fieldset class="mode-group">
       <legend class="ctl-label">Mode</legend>
-      <label class="radio-pill"><input type="radio" name="mode" value="raw" checked><span>Raw</span></label>
+      <label class="radio-pill on"><input type="radio" name="mode" value="raw" checked><span>Raw</span></label>
       <label class="radio-pill"><input type="radio" name="mode" value="residual"><span>Residual <small>(VN-Index removed)</small></span></label>
     </fieldset>
-    <label class="check-pill" title="Residual threshold is matched to the raw edge count, never below 0.05">
+    <label class="check-pill on" title="Residual threshold is matched to the raw edge count, never below 0.05">
       <input type="checkbox" id="match-edges" checked>
       <span>Residual: match raw edge count</span>
     </label>
@@ -125,7 +125,7 @@
       <h3>Limits</h3>
       <ul>
         <li>Proxy network built from stock prices only — no bilateral lending or exposure data.</li>
-        <li>Co-movement does not imply causation, actual contagion, or systemic importance.</li>
+        <li>Co-movement is a descriptive proxy only; the banner above states what it does not imply.</li>
         <li>Centrality is not systemic importance: VCB and BID are large banks but sit in the
         Periphery/Middle tiers at default settings.</li>
         <li>Ownership-group comparisons (Q3) describe groups only; bank size is outside the
@@ -156,6 +156,7 @@
       <div class="legend-item"><span class="line-swatch dashed" style="background:#6a51a3"></span>Balanced panel (15 banks since 2019)</div>
       <div class="legend-item"><span class="swatch swatch-null"></span>No data in this window</div>
       <div class="legend-item"><span class="swatch" style="background:#737373"></span>Diagonal (not a pair)</div>
+      <div class="legend-item"><span class="swatch swatch-region"></span>Annotation region (timeline)</div>
       <div class="legend-item"><span class="swatch swatch-select"></span>Selected bank / pair</div>
       <div class="legend-scale">
         <div class="legend-scale-title">Correlation (both modes)</div>
@@ -174,8 +175,11 @@
 <script src="js/data_bundle.js"></script>
 <script src="js/state.js"></script>
 <script src="js/data.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/table.js"></script>
-<!-- View scripts (network.js by Tín; timeline/matrix/analysis.js by Đạt)
+<script src="js/timeline.js"></script>
+<script src="js/matrix.js"></script>
+<!-- View scripts (network.js by Tín; analysis.js by Đạt)
      are inserted here in their integration PRs, before main.js. -->
 <script src="js/main.js"></script>
 </body>

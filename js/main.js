@@ -15,10 +15,7 @@
   };
   const PENDING = {
     network: ['Network view', 'js/network.js (Tín) plugs into this container through DSDV.views.network. The container and the init/update contract are ready; integration lands with PR#4.'],
-    matrix: ['Matrix view', 'The 19×19 matrix with the shared diverging scale arrives in PR#3 (timeline + matrix).'],
-    analysis: ['Analysis views', 'Q1 (tier heatmap), Q3 (ownership groups) and Q4 (sensitivity) arrive in PR#4.'],
-    timeline: ['Timeline', 'Raw + residual lines, balanced 15-bank panel, entry markers and annotations arrive in PR#3.'],
-    ranking: ['Ranking table', 'Tier-based ranking (Core / Middle / Periphery) arrives in PR#2.']
+    analysis: ['Analysis views', 'Q1 (tier heatmap), Q3 (ownership groups) and Q4 (sensitivity) arrive in PR#4.']
   };
   let playTimer = null;
 
@@ -83,7 +80,13 @@
     $('window-slider').value = s.windowIndex;
     $('threshold-slider').value = s.threshold;
     $('match-edges').checked = s.matchRawEdges;
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === s.mode; });
+    $('match-edges').closest('.check-pill').classList.toggle('on', s.matchRawEdges);
+    // Class-based checked styling: :has(input:checked) misses programmatic
+    // .checked changes on some Chromium versions, so never rely on it here.
+    document.querySelectorAll('input[name="mode"]').forEach(r => {
+      r.checked = r.value === s.mode;
+      r.closest('.radio-pill').classList.toggle('on', r.checked);
+    });
     syncPlay(s);
 
     $('window-label').textContent = w.end;
